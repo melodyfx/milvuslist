@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/go-ini/ini"
 	"github.com/milvus-io/milvus-sdk-go/v2/client"
-	"github.com/milvus-io/milvus-sdk-go/v2/entity"
 	"os"
 )
 
@@ -64,40 +63,41 @@ func main() {
 	}
 	defer c.Close()
 
+	root := &Root{}
 	dbs, _ := c.ListDatabases(ctx)
+
 	for _, db := range dbs {
-		fmt.Printf(msgFmt, db)
+		d := NewDatabase(db.Name)
+		root.Add(d)
 		c.UsingDatabase(ctx, db.Name)
 		colls, _ := c.ListCollections(ctx)
-		var cns = make([]string, len(colls))
-		// 设置隔离级别
-		func1 := func(option *client.SearchQueryOption) {
-			option.ConsistencyLevel = entity.ClEventually
-		}
 		for i := 0; i < len(colls); i++ {
 			collName := colls[i].Name
-			// 获取collection隔离级别
+			co := NewCollection(collName)
+			co.id = i + 1
+			d.Add(co)
+
 			ct, _ := c.DescribeCollection(ctx, collName)
+			// 处理collection
+			co.consistency_level = ct.ConsistencyLevel.CommonConsistencyLevel().String()
 			// 获取collection近似数量
 			nums, _ := c.GetCollectionStatistics(ctx, collName)
-			// 获取collection精确数量
-			fieldstr := "count(*)"
-			outFields := []string{fieldstr}
-			rs, err := c.Query(ctx, collName, nil, "", outFields, func1)
-			if err != nil {
-				fmt.Printf("%s:%s\n", collName, err.Error())
-				cns[i] = fmt.Sprintf("%s,ConsistencyLevel:%s,approxCount:%s,exactCount:???", collName, ct.ConsistencyLevel.CommonConsistencyLevel().String(), nums["row_count"])
-				continue
+			co.nums = nums["row_count"]
+			co.shardNum = ct.ShardNum
+
+			// 处理schema
+			schema := NewSchema()
+			co.Add(schema)
+			schema.desc = ct.Schema.Description
+			// 处理fields
+			fields := ct.Schema.Fields
+			for _, field := range fields {
+				f := NewField()
+				f.name = field.Name
+				f.ftype = field.DataType.Name()
+				schema.Add(f)
 			}
-			column := rs.GetColumn(fieldstr)
-			count, _ := column.GetAsInt64(0)
-			cns[i] = fmt.Sprintf("%s,ConsistencyLevel:%s,approxCount:%s,exactCount:%d", collName, ct.ConsistencyLevel.CommonConsistencyLevel().String(), nums["row_count"], count)
 		}
-
-		for i := 0; i < len(cns); i++ {
-			fmt.Printf("%d: %s\n", (i + 1), cns[i])
-		}
-		fmt.Println()
 	}
-
+	root.show()
 }
