@@ -80,6 +80,8 @@ func main() {
 			ct, _ := c.DescribeCollection(ctx, collName)
 			// 处理collection
 			co.consistency_level = ct.ConsistencyLevel.CommonConsistencyLevel().String()
+			stats, _ := c.GetLoadState(ctx, collName, nil)
+			co.loadStat = stats
 			// 获取collection近似数量
 			nums, _ := c.GetCollectionStatistics(ctx, collName)
 			co.nums = nums["row_count"]
