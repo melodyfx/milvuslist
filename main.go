@@ -51,7 +51,6 @@ func main() {
 	username := section.Key("username").String()
 	password := section.Key("password").String()
 
-	fmt.Printf(msgFmt, "start connecting to Milvus")
 	c, err := client.NewClient(ctx, client.Config{
 		Address:  milvusAddr,
 		Username: username,
@@ -82,6 +81,7 @@ func main() {
 			co.consistency_level = ct.ConsistencyLevel.CommonConsistencyLevel().String()
 			stats, _ := c.GetLoadState(ctx, collName, nil)
 			co.loadStat = stats
+
 			// 获取collection近似数量
 			nums, _ := c.GetCollectionStatistics(ctx, collName)
 			co.nums = nums["row_count"]
@@ -91,12 +91,18 @@ func main() {
 			schema := NewSchema()
 			co.Add(schema)
 			schema.desc = ct.Schema.Description
+			schema.dynamicField = ct.Schema.EnableDynamicField
 			// 处理fields
 			fields := ct.Schema.Fields
 			for _, field := range fields {
 				f := NewField()
 				f.name = field.Name
 				f.ftype = field.DataType.Name()
+				f.primaryKey = field.PrimaryKey
+				f.autoId = field.AutoID
+				f.typeParam = field.TypeParams
+				idxs, _ := c.DescribeIndex(ctx, collName, field.Name)
+				f.indexs = idxs
 				schema.Add(f)
 			}
 		}

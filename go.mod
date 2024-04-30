@@ -4,7 +4,7 @@ go 1.20
 
 require (
 	github.com/go-ini/ini v1.67.0
-	github.com/milvus-io/milvus-sdk-go/v2 v2.3.2
+	github.com/milvus-io/milvus-sdk-go/v2 v2.4.0
 )
 
 require (
@@ -17,7 +17,7 @@ require (
 	github.com/grpc-ecosystem/go-grpc-middleware v1.3.0 // indirect
 	github.com/kr/pretty v0.3.0 // indirect
 	github.com/kr/text v0.2.0 // indirect
-	github.com/milvus-io/milvus-proto/go-api/v2 v2.3.2 // indirect
+	github.com/milvus-io/milvus-proto/go-api/v2 v2.4.0 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/rogpeppe/go-internal v1.8.1 // indirect
 	github.com/tidwall/gjson v1.14.4 // indirect

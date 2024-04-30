@@ -3,8 +3,9 @@ package main
 import "fmt"
 
 type Schema struct {
-	desc   string
-	fields []*Field
+	desc         string
+	dynamicField bool
+	fields       []*Field
 }
 
 func NewSchema() *Schema {
@@ -12,6 +13,7 @@ func NewSchema() *Schema {
 }
 func (s *Schema) show() {
 	fmt.Println("字段:")
+	fmt.Printf("EnableDynamicField:%t\n", s.dynamicField)
 	for _, f := range s.fields {
 		f.show()
 	}
